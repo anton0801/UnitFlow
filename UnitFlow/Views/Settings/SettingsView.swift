@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var showExportSheet = false
     @State private var showLogoutAlert = false
     @State private var showClearDataAlert = false
+    @State private var showDeleteAccountAlert = false
     @State private var showConfirmation = false
     @State private var confirmationMessage = ""
 
@@ -248,6 +249,29 @@ struct SettingsView: View {
                         }
                         .buttonStyle(ScaleButtonStyle())
                         .padding(.horizontal, 20)
+
+                        // MARK: Delete Account
+                        Button {
+                            showDeleteAccountAlert = true
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "person.crop.circle.badge.minus")
+                                    .font(.system(size: 16, weight: .semibold))
+                                Text("Delete Account")
+                                    .font(UFFont.headline(16))
+                            }
+                            .foregroundColor(UFColors.danger)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 54)
+                            .background(UFColors.danger.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(UFColors.danger.opacity(0.2), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(ScaleButtonStyle())
+                        .padding(.horizontal, 20)
                         .padding(.bottom, 100)
                     }
                     .padding(.top, 8)
@@ -291,6 +315,14 @@ struct SettingsView: View {
             }
         } message: {
             Text("This will permanently delete all sites, reports, issues, and worker data. This cannot be undone.")
+        }
+        .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete Account", role: .destructive) {
+                authVM.deleteAccount()
+            }
+        } message: {
+            Text("This will permanently delete your account and all associated data. This cannot be undone.")
         }
     }
 

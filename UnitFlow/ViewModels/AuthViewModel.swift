@@ -102,6 +102,16 @@ class AuthViewModel: ObservableObject {
         isLoggedIn = false
         UserDefaults.standard.removeObject(forKey: currentUserKey)
     }
+
+    func deleteAccount() {
+        guard let user = currentUser else { return }
+        var users = getStoredUsers()
+        users.removeAll { $0.id == user.id }
+        if let data = try? JSONEncoder().encode(users) {
+            UserDefaults.standard.set(data, forKey: usersKey)
+        }
+        signOut()
+    }
     
     func updateProfile(fullName: String, companyName: String, role: User.UserRole) {
         guard var user = currentUser else { return }
