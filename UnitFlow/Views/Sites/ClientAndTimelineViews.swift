@@ -6,6 +6,7 @@ struct ClientSummaryView: View {
     @EnvironmentObject var sitesVM: SitesViewModel
     @State private var showShareSheet = false
     @State private var summaryText = ""
+    @State private var showPDFReport = false
 
     var completedStages: [WorkStage] {
         site.stages.filter { $0.status == .done }
@@ -157,15 +158,14 @@ struct ClientSummaryView: View {
                         }
                     }
 
-                    // Share Button
+                    // Export PDF button
                     Button {
-                        summaryText = generateSummaryText()
-                        showShareSheet = true
+                        showPDFReport = true
                     } label: {
                         HStack(spacing: 10) {
-                            Image(systemName: "square.and.arrow.up")
+                            Image(systemName: "doc.richtext.fill")
                                 .font(.system(size: 16, weight: .semibold))
-                            Text("Share with Client")
+                            Text("Export PDF Report")
                                 .font(UFFont.headline(16))
                         }
                         .foregroundColor(.white)
@@ -174,6 +174,26 @@ struct ClientSummaryView: View {
                         .background(UFColors.gradientOrange)
                         .clipShape(RoundedRectangle(cornerRadius: 16))
                         .shadow(color: UFColors.primary.opacity(0.3), radius: 8, x: 0, y: 4)
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                    .padding(.horizontal, 20)
+
+                    // Share text summary button
+                    Button {
+                        summaryText = generateSummaryText()
+                        showShareSheet = true
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 16, weight: .semibold))
+                            Text("Share Text Summary")
+                                .font(UFFont.headline(16))
+                        }
+                        .foregroundColor(UFColors.primary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(UFColors.primary.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
                     .buttonStyle(ScaleButtonStyle())
                     .padding(.horizontal, 20)
@@ -186,6 +206,9 @@ struct ClientSummaryView: View {
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(items: [summaryText])
+        }
+        .sheet(isPresented: $showPDFReport) {
+            ReportConfigSheet(site: site)
         }
     }
 

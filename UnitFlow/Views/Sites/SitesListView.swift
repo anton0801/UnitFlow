@@ -156,6 +156,7 @@ struct SiteDetailView: View {
     @State private var showNewMaterial = false
     @State private var showDelivery = false
     @State private var showDocument = false
+    @State private var showClientReport = false
     
     private var currentSite: ConstructionSite {
         sitesVM.sites.first(where: { $0.id == site.id }) ?? site
@@ -219,6 +220,9 @@ struct SiteDetailView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button { showEdit = true } label: { Label("Edit Site", systemImage: "pencil") }
+                    Divider()
+                    Button { showClientReport = true } label: { Label("Client Report", systemImage: "doc.richtext.fill") }
+                    Divider()
                     Button { showNewReport = true } label: { Label("New Report", systemImage: "doc.text") }
                     Button { showNewTask = true } label: { Label("New Task", systemImage: "checkmark.circle") }
                     Button { showNewMaterial = true } label: { Label("Request Material", systemImage: "cube") }
@@ -238,6 +242,7 @@ struct SiteDetailView: View {
         .sheet(isPresented: $showNewMaterial) { NewMaterialView(siteId: site.id) }
         .sheet(isPresented: $showDelivery) { NewDeliveryView(siteId: site.id) }
         .sheet(isPresented: $showDocument) { NewDocumentView(siteId: site.id) }
+        .sheet(isPresented: $showClientReport) { ReportConfigSheet(site: currentSite) }
     }
 }
 
@@ -339,16 +344,37 @@ struct TimelineRow: View {
 struct SiteStagesTab: View {
     let site: ConstructionSite
     @EnvironmentObject var sitesVM: SitesViewModel
-    
+    @State private var showTimeline = false
+
     var currentSite: ConstructionSite {
         sitesVM.sites.first(where: { $0.id == site.id }) ?? site
     }
-    
+
     var body: some View {
-        VStack(spacing: 10) {
-            ForEach(currentSite.stages.sorted(by: { $0.order < $1.order })) { stage in
-                StageRow(stage: stage, siteId: site.id)
-                    .padding(.horizontal, 16)
+        VStack(spacing: 0) {
+            // List / Timeline toggle
+            HStack {
+                Spacer()
+                Picker("View", selection: $showTimeline) {
+                    Label("List", systemImage: "list.bullet").tag(false)
+                    Label("Timeline", systemImage: "chart.bar.xaxis").tag(true)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 200)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 10)
+            }
+
+            if showTimeline {
+                GanttContainerView(site: site)
+                    .frame(minHeight: 400)
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(currentSite.stages.sorted(by: { $0.order < $1.order })) { stage in
+                        StageRow(stage: stage, siteId: site.id)
+                            .padding(.horizontal, 16)
+                    }
+                }
             }
         }
     }
@@ -499,9 +525,25 @@ struct SiteReportsTab: View {
     let site: ConstructionSite
     @EnvironmentObject var sitesVM: SitesViewModel
     @Binding var showNewReport: Bool
-    
+    @State private var showClientReport = false
+
     var body: some View {
         VStack(spacing: 12) {
+            // Generate Client PDF — primary CTA
+            Button { showClientReport = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "doc.richtext.fill").font(.system(size: 15))
+                    Text("Generate Client PDF").font(UFFont.headline(15))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity).frame(height: 48)
+                .background(UFColors.gradientOrange)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .shadow(color: UFColors.primary.opacity(0.25), radius: 6, x: 0, y: 3)
+            }
+            .buttonStyle(ScaleButtonStyle())
+            .padding(.horizontal, 16)
+
             Button { showNewReport = true } label: {
                 HStack {
                     Image(systemName: "doc.text.fill").font(.system(size: 16))
@@ -524,6 +566,9 @@ struct SiteReportsTab: View {
                         .padding(.horizontal, 16)
                 }
             }
+        }
+        .sheet(isPresented: $showClientReport) {
+            ReportConfigSheet(site: site)
         }
     }
 }

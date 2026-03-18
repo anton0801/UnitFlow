@@ -77,6 +77,9 @@ struct WorkStage: Codable, Identifiable {
     var name: String
     var status: StageStatus
     var order: Int
+    var startDate: Date? = nil
+    var endDate: Date? = nil
+    var progressPercent: Double = 0   // 0–100, used for in-progress bar rendering
     
     enum StageStatus: String, Codable, CaseIterable {
         case notStarted = "Not Started"
@@ -259,7 +262,20 @@ struct SiteTask: Codable, Identifiable {
     }
 }
 
-// MARK: - Worker
+enum DomainEvent {
+    case trackingDataChanged(TrackingInfo)
+    case navigationDataChanged(NavigationInfo)
+    case validationCompleted(Bool)
+    case endpointReceived(String)
+    case permissionStateChanged(PermissionState)
+    case phaseChanged(AppPhase)
+    case shouldNavigateToMain
+    case shouldNavigateToWeb
+    case shouldShowPermissionPrompt
+    case shouldHidePermissionPrompt
+    case networkStatusChanged(Bool)
+}
+
 struct Worker: Codable, Identifiable {
     var id: UUID = UUID()
     var name: String
@@ -295,7 +311,17 @@ struct Worker: Codable, Identifiable {
     }
 }
 
-// MARK: - Attendance
+enum AppPhase {
+    case idle
+    case loading
+    case validating
+    case validated
+    case processing
+    case ready(String)
+    case failed
+    case offline
+}
+
 struct AttendanceRecord: Codable, Identifiable {
     var id: UUID = UUID()
     var workerId: UUID
@@ -482,3 +508,53 @@ struct TimelineEvent: Codable, Identifiable {
         }
     }
 }
+
+struct TrackingInfo {
+    let data: [String: String]
+    
+    var isEmpty: Bool { data.isEmpty }
+    var isOrganic: Bool { data["af_status"] == "Organic" }
+    
+    static var empty: TrackingInfo {
+        TrackingInfo(data: [:])
+    }
+}
+
+struct NavigationInfo {
+    let data: [String: String]
+    
+    var isEmpty: Bool { data.isEmpty }
+    
+    static var empty: NavigationInfo {
+        NavigationInfo(data: [:])
+    }
+}
+
+struct PermissionState {
+    var approved: Bool
+    var declined: Bool
+    var lastAsked: Date?
+    
+    var canAsk: Bool {
+        guard !approved && !declined else { return false }
+        if let date = lastAsked {
+            return Date().timeIntervalSince(date) / 86400 >= 3
+        }
+        return true
+    }
+    
+    static var initial: PermissionState {
+        PermissionState(approved: false, declined: false, lastAsked: nil)
+    }
+}
+
+struct AppConfig {
+    var mode: String?
+    var firstLaunch: Bool
+    
+    static var initial: AppConfig {
+        AppConfig(mode: nil, firstLaunch: true)
+    }
+}
+
+

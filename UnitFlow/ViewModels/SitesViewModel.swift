@@ -69,6 +69,23 @@ class SitesViewModel: ObservableObject {
             addTimelineEvent(siteId: siteId, type: .stageChange, title: "Stage Updated", description: "\(stageName) → \(status.rawValue)")
         }
     }
+
+    func updateStageSchedule(siteId: UUID, stageId: UUID, startDate: Date, endDate: Date) {
+        guard let sIdx = sites.firstIndex(where: { $0.id == siteId }) else { return }
+        if let stIdx = sites[sIdx].stages.firstIndex(where: { $0.id == stageId }) {
+            sites[sIdx].stages[stIdx].startDate = startDate
+            sites[sIdx].stages[stIdx].endDate = endDate
+            saveSites()
+        }
+    }
+
+    func updateStageProgress(siteId: UUID, stageId: UUID, progressPercent: Double) {
+        guard let sIdx = sites.firstIndex(where: { $0.id == siteId }) else { return }
+        if let stIdx = sites[sIdx].stages.firstIndex(where: { $0.id == stageId }) {
+            sites[sIdx].stages[stIdx].progressPercent = progressPercent
+            saveSites()
+        }
+    }
     
     private func recalcProgress(siteIdx: Int) {
         let stages = sites[siteIdx].stages
@@ -271,14 +288,60 @@ class SitesViewModel: ObservableObject {
     private func seedDemoData() {
         let siteId1 = UUID()
         let siteId2 = UUID()
-        
+        let cal = Calendar.current
+        let base = cal.date(byAdding: .month, value: -2, to: Date())!
+
         var stages1 = WorkStage.defaultStages()
         stages1[0].status = .done
+        stages1[0].progressPercent = 100
+        stages1[0].startDate = base
+        stages1[0].endDate = cal.date(byAdding: .day, value: 18, to: base)
+
         stages1[1].status = .done
+        stages1[1].progressPercent = 100
+        stages1[1].startDate = cal.date(byAdding: .day, value: 14, to: base)
+        stages1[1].endDate = cal.date(byAdding: .day, value: 38, to: base)
+
         stages1[2].status = .inProgress
-        
+        stages1[2].progressPercent = 60
+        stages1[2].startDate = cal.date(byAdding: .day, value: 35, to: base)
+        stages1[2].endDate = cal.date(byAdding: .day, value: 72, to: base)
+
+        stages1[3].status = .waiting
+        stages1[3].progressPercent = 0
+        stages1[3].startDate = cal.date(byAdding: .day, value: 65, to: base)
+        stages1[3].endDate = cal.date(byAdding: .day, value: 100, to: base)
+
+        stages1[4].status = .notStarted
+        stages1[4].startDate = cal.date(byAdding: .day, value: 95, to: base)
+        stages1[4].endDate = cal.date(byAdding: .day, value: 130, to: base)
+
+        stages1[5].status = .notStarted
+        stages1[5].startDate = cal.date(byAdding: .day, value: 125, to: base)
+        stages1[5].endDate = cal.date(byAdding: .day, value: 155, to: base)
+
+        stages1[6].status = .notStarted
+        stages1[6].startDate = cal.date(byAdding: .day, value: 150, to: base)
+        stages1[6].endDate = cal.date(byAdding: .day, value: 175, to: base)
+
+        stages1[7].status = .notStarted
+        stages1[7].startDate = cal.date(byAdding: .day, value: 170, to: base)
+        stages1[7].endDate = cal.date(byAdding: .day, value: 185, to: base)
+
         var stages2 = WorkStage.defaultStages()
         stages2[0].status = .done
+        stages2[0].progressPercent = 100
+        stages2[0].startDate = cal.date(byAdding: .weekOfMonth, value: -1, to: Date())
+        stages2[0].endDate = cal.date(byAdding: .day, value: 7, to: Date())
+
+        stages2[1].status = .inProgress
+        stages2[1].progressPercent = 30
+        stages2[1].startDate = cal.date(byAdding: .day, value: 5, to: Date())
+        stages2[1].endDate = cal.date(byAdding: .day, value: 30, to: Date())
+
+        stages2[2].status = .notStarted
+        stages2[2].startDate = cal.date(byAdding: .day, value: 28, to: Date())
+        stages2[2].endDate = cal.date(byAdding: .day, value: 52, to: Date())
         
         let site1 = ConstructionSite(
             id: siteId1, name: "Maple Street Residence", address: "142 Maple Street, Portland, OR",

@@ -2,7 +2,7 @@ import SwiftUI
 import UserNotifications
 
 struct SettingsView: View {
-    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var appState: ApplicationMainState
     @EnvironmentObject var authVM: AuthViewModel
     @EnvironmentObject var notificationsVM: NotificationsViewModel
     @EnvironmentObject var sitesVM: SitesViewModel
